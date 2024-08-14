@@ -1,0 +1,10 @@
+version: "3.6"
+services:
+  container_name: #Change to your name
+    image: 
+    container_name: 
+    restart: always
+    environment:
+      - EXAMPLE_ENV= #Google account email
+    volumes:
+      - ./app:/app
