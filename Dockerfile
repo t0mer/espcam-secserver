@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
 LABEL maintainer=""
 
@@ -17,13 +17,13 @@ RUN apt install -yqq python3-pip && \
     apt install -yqq libffi-dev && \
     apt install -yqq libssl-dev
 
-RUN  pip3 install --upgrade setuptools --no-cache-dir --break-system-packages
+RUN  pip3 install --upgrade setuptools --no-cache-dir
 
 RUN mkdir -p /app/
 
 COPY requirements.txt /tmp
 
-RUN pip3 install --break-system-packages -r /tmp/requirements.txt
+RUN pip3 install -r /tmp/requirements.txt
 
 COPY app /app
 
