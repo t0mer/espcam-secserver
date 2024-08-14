@@ -17,8 +17,7 @@ RUN apt install -yqq python3-pip && \
     apt install -yqq libffi-dev && \
     apt install -yqq libssl-dev
 
-RUN  pip3 install --upgrade pip --no-cache-dir && \
-     pip3 install --upgrade setuptools --no-cache-dir
+RUN  pip3 install --upgrade pip --no-cache-dir
 
 RUN mkdir -p /app/
 
