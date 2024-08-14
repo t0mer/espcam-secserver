@@ -1,1 +1,7 @@
 loguru
+fastapi
+uvicorn
+requests
+ipaddress
+cryptography==2.6.1
+whatsapp-api-client-python
