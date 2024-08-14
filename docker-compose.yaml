@@ -5,6 +5,9 @@ services:
     container_name: 
     restart: always
     environment:
-      - EXAMPLE_ENV= #Google account email
-    volumes:
-      - ./app:/app
+      - GREEN_API_INSTANCE_ID= #Green API Instance Id
+      - GREEN_API_TOKEN= #Green API Token
+      - TARGET= #Target phone number 972*********@c.us for contact or @g.us for group
+      - MESSAGE= #Caption for the image sent
+    ports:
+      - "80:80"
