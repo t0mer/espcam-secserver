@@ -1,8 +1,8 @@
 version: "3.6"
 services:
-  container_name: #Change to your name
-    image: 
-    container_name: 
+  espcam-secserver:
+    image: techblog/espcam-secserver
+    container_name: espcam-secserver
     restart: always
     environment:
       - GREEN_API_INSTANCE_ID= #Green API Instance Id
