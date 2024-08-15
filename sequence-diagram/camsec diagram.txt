@@ -1,0 +1,16 @@
+title Security Camera Server
+
+participant "Door Magnet" as dm
+participant "ESP32 cam" as ec
+participant "Backend Server" as bs
+participant "Whatsapp" as wa
+
+dm->ec: Detect door open
+ec->ec: Turns on the led for 5 seconds
+ec->bs: Sends http request to the backend
+bs->bs: Get the camera ip from the request
+bs->ec: Capture first image and wait 1 second
+bs->ec: Capture second image and wait 1 second
+bs->ec: Capture third image and wait 1 second
+bs->wa: Send the images to whatsapp
+ec->ec: Turns off the led 
