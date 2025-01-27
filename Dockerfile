@@ -1,4 +1,4 @@
-FROM ubuntu:24.10
+FROM ubuntu:22.04
 
 LABEL maintainer=""
 
