@@ -9,5 +9,7 @@ services:
       - GREEN_API_TOKEN= #Green API Token
       - TARGET= #Target phone number 972*********@c.us for contact or @g.us for group
       - MESSAGE= #Caption for the image sent
+      - AUTH_TOKEN= #Shared secret required to trigger the capture endpoint
+      - CORS_ORIGINS= #Optional comma-separated allowed CORS origins
     ports:
-      - "80:80"
+      - "80:8000"

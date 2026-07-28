@@ -121,7 +121,7 @@ class Server:
     
   
     def start(self):
-        uvicorn.run(self.app, host="0.0.0.0", port=80)
+        uvicorn.run(self.app, host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
         
         
 if __name__=="__main__":
