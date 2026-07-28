@@ -1,5 +1,7 @@
 import os
 import time
+import shutil
+import tempfile
 import uvicorn
 import requests
 import ipaddress
@@ -70,9 +72,11 @@ class Server:
             host_for_url = f"[{client_host}]" if client_ip.version == 6 else client_host
             url = f"http://{host_for_url}/capture"
 
+            # Unique per-request working directory avoids filename collisions
+            # between concurrent triggers and is always cleaned up below.
+            tmpdir = tempfile.mkdtemp(prefix="espcam_")
             try:
-                file_names = [f'image{i+1}.jpg' for i in range(3)]
-
+                saved = []
                 for i in range(3):
                     # Fetch the image. The timeout prevents a hung camera from
                     # blocking the worker indefinitely.
@@ -84,31 +88,34 @@ class Server:
                         continue
                     if response.status_code == 200:
                         # Save the image to a local file
-                        with open(file_names[i], 'wb') as file:
+                        path = os.path.join(tmpdir, f"image{i+1}.jpg")
+                        with open(path, 'wb') as file:
                             file.write(response.content)
-                        logger.info(f"Image saved as {file_names[i]}")
+                        saved.append(path)
+                        logger.info(f"Image saved as {path}")
                     else:
                         logger.error(f"Failed to retrieve image {i+1}: HTTP {response.status_code}")
 
                     # Wait for 1 second before the next request
                     time.sleep(1)
-                
-                #Send the images
-                for i in range(3):
-                    upload_file_response = greenAPI.sending.uploadFile(file_names[i]) 
-                    if upload_file_response.code != 200:
-                        logger.error("Failed to upload file: " + file_names[i])
-                    else:
+
+                # Send only the images that were actually captured.
+                for path in saved:
+                    try:
+                        upload_file_response = greenAPI.sending.uploadFile(path)
+                        if upload_file_response.code != 200:
+                            logger.error("Failed to upload file: " + path)
+                            continue
                         url_file = upload_file_response.data["urlFile"]
-                        logger.debug(url_file)
-                        url = urlparse(url_file)
-                        file_name = basename(url.path)
-                        logger.warning(file_name)
+                        file_name = basename(urlparse(url_file).path)
                         send_file_by_url_response = greenAPI.sending.sendFileByUrl(TARGET, url_file, file_name, caption=MESSAGE)
                         logger.info(send_file_by_url_response)
-                        os.remove(file_names[i])
+                    except Exception as e:
+                        logger.error(f"Failed to send {path}: {e}")
             except Exception as e:
-                logger.error(str(e)) 
+                logger.error(str(e))
+            finally:
+                shutil.rmtree(tmpdir, ignore_errors=True)
             return "OK"
 
     
