@@ -24,6 +24,19 @@ MESSAGE = os.getenv("MESSAGE")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 # Timeout (seconds) for outbound requests to the camera.
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "10"))
+
+
+def _redact_secrets(record):
+    """Scrub credentials from log messages. The GreenAPI SDK embeds the token
+    in request URLs, so an exception message can otherwise leak it to the logs."""
+    message = record["message"]
+    for secret in (GREEN_API_TOKEN, GREEN_API_INSTANCE_ID, AUTH_TOKEN):
+        if secret:
+            message = message.replace(secret, "***")
+    record["message"] = message
+
+
+logger = logger.patch(_redact_secrets)
 greenAPI = API.GreenAPI(GREEN_API_INSTANCE_ID,GREEN_API_TOKEN)
 
 class Server:
