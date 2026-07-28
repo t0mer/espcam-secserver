@@ -1,32 +1,27 @@
-FROM ubuntu:24.10
+FROM python:3.12-slim
 
-LABEL maintainer=""
+LABEL maintainer="tomer.klein@gmail.com"
 
-ENV PYTHONIOENCODING=utf-8
-ENV LANG=C.UTF-8
-
-ENV GREEN_API_INSTANCE_ID ""
-ENV GREEN_API_TOKEN ""
-ENV TARGET ""
-ENV MESSAGE ""
-
-
-RUN apt update -yqq 
-
-RUN apt install -yqq python3-pip && \
-    apt install -yqq libffi-dev && \
-    apt install -yqq libssl-dev
-
-RUN  pip3 install --upgrade setuptools --no-cache-dir
-
-RUN mkdir -p /app/
-
-COPY requirements.txt /tmp
-
-RUN pip3 install -r /tmp/requirements.txt
-
-COPY app /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONIOENCODING=utf-8 \
+    LANG=C.UTF-8 \
+    PORT=8000
 
 WORKDIR /app
 
-ENTRYPOINT ["/usr/bin/python3", "/app/app.py"]
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+COPY app /app
+
+# Run as a non-root user on an unprivileged port.
+RUN useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+ENTRYPOINT ["python3", "/app/app.py"]
