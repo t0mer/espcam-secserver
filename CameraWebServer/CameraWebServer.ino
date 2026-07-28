@@ -14,6 +14,16 @@
 const char* ssid = "";
 const char* password = "";
 
+// ===========================
+// Backend security server
+// ===========================
+// Base URL of the espcam-secserver instance (include scheme, host and port).
+const char* backendUrl = "http://192.168.1.100:8000/";
+// Must match the server's AUTH_TOKEN. The server rejects requests without it.
+const char* authToken = "";
+// Timeout (ms) for the outbound trigger request.
+const uint16_t backendTimeoutMs = 10000;
+
 // Additional hardware pins
 const int doorPin = 13; // GPIO pin for door magnet
 const int ledPin = 4; // Internal LED pin for ESP32-CAM
@@ -133,10 +143,12 @@ void loop() {
       digitalWrite(ledPin, HIGH);
       Serial.println("Door opened, LED on");
 
-      // Send asynchronous HTTP request
+      // Notify the backend security server so it can capture and send images.
       if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
-        http.begin("http://"); // Replace with your URL (Beckend server)
+        http.begin(backendUrl);
+        http.addHeader("X-Auth-Token", authToken);
+        http.setTimeout(backendTimeoutMs);
         int httpResponseCode = http.GET();
         Serial.printf("HTTP Response code: %d\n", httpResponseCode);
         http.end();
