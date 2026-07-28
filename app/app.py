@@ -19,8 +19,8 @@ GREEN_API_INSTANCE_ID = os.getenv("GREEN_API_INSTANCE_ID")
 GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
 TARGET = os.getenv("TARGET")
 MESSAGE = os.getenv("MESSAGE")
-# Shared secret required to trigger the capture endpoint. If unset the endpoint
-# stays open (bootstrap mode) but a warning is logged on every request.
+# Shared secret required to trigger the capture endpoint. Required: when unset
+# the endpoint refuses every request (fail closed).
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 # Timeout (seconds) for outbound requests to the camera.
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "10"))
@@ -62,12 +62,12 @@ class Server:
             """
             # Authenticate before doing any work. Kept outside the try/except
             # below so the 401 is not swallowed and turned into "OK".
-            if AUTH_TOKEN:
-                provided = request.headers.get("X-Auth-Token") or request.query_params.get("token") or ""
-                if not hmac.compare_digest(provided, AUTH_TOKEN):
-                    raise HTTPException(status_code=401, detail="Unauthorized")
-            else:
-                logger.warning("AUTH_TOKEN not set - capture endpoint is UNAUTHENTICATED")
+            if not AUTH_TOKEN:
+                logger.error("AUTH_TOKEN not configured - refusing request")
+                raise HTTPException(status_code=503, detail="Server not configured: AUTH_TOKEN is required")
+            provided = request.headers.get("X-Auth-Token") or request.query_params.get("token") or ""
+            if not hmac.compare_digest(provided, AUTH_TOKEN):
+                raise HTTPException(status_code=401, detail="Unauthorized")
 
             # Validate the client address before making any outbound request.
             # Kept outside the try/except so the error is not turned into "OK".
