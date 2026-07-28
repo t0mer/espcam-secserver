@@ -16,6 +16,9 @@ GREEN_API_INSTANCE_ID = os.getenv("GREEN_API_INSTANCE_ID")
 GREEN_API_TOKEN = os.getenv("GREEN_API_TOKEN")
 TARGET = os.getenv("TARGET")
 MESSAGE = os.getenv("MESSAGE")
+# Shared secret required to trigger the capture endpoint. If unset the endpoint
+# stays open (bootstrap mode) but a warning is logged on every request.
+AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 greenAPI = API.GreenAPI(GREEN_API_INSTANCE_ID,GREEN_API_TOKEN)
 
 class Server:
@@ -39,8 +42,16 @@ class Server:
             """
             Get Images
             """
+            # Authenticate before doing any work. Kept outside the try/except
+            # below so the 401 is not swallowed and turned into "OK".
+            if AUTH_TOKEN:
+                provided = request.headers.get("X-Auth-Token") or request.query_params.get("token")
+                if provided != AUTH_TOKEN:
+                    raise HTTPException(status_code=401, detail="Unauthorized")
+            else:
+                logger.warning("AUTH_TOKEN not set - capture endpoint is UNAUTHENTICATED")
+
             try:
-                time.sleep(1)
                 client_host = request.client.host
                 ipv4_address = str(client_host)
                 ip = ipaddress.IPv4Address(ipv4_address)
