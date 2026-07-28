@@ -22,12 +22,15 @@ class Server:
     def __init__(self):
        
         self.app = FastAPI(title="esp32 cam security server", description="Capture and send images taken with esp32 cam", version='1.0.0',  contact={"name": "Tomer Klein", "email": "tomer.klein@gmail.com", "url": "https://github.com/t0mer/espcam-secserver"})
-        self.origins = ["*"]
+        # Only allow the origins explicitly configured via CORS_ORIGINS (comma
+        # separated). Default is no cross-origin access. Never combine a wildcard
+        # origin with credentials.
+        self.origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=self.origins,
-            allow_credentials=True,
-            allow_methods=["*"],
+            allow_credentials=False,
+            allow_methods=["GET"],
             allow_headers=["*"],
         )
 
