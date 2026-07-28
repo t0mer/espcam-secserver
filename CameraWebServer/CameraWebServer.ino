@@ -30,8 +30,9 @@ const int ledPin = 4; // Internal LED pin for ESP32-CAM
 
 // Variables for door and LED control
 bool isDoorOpen = false;
+bool ledOn = false;
 unsigned long doorOpenTime = 0;
-const unsigned long ledDuration = 4000; // 5 seconds
+const unsigned long ledDuration = 4000; // 4 seconds
 
 void startCameraServer();
 void setupLedFlash(int pin);
@@ -141,6 +142,7 @@ void loop() {
 
       // Turn on LED at full brightness
       digitalWrite(ledPin, HIGH);
+      ledOn = true;
       Serial.println("Door opened, LED on");
 
       // Notify the backend security server so it can capture and send images.
@@ -158,16 +160,20 @@ void loop() {
     if (isDoorOpen) {
       isDoorOpen = false;
       Serial.println("Door closed");
-      
+
       // Turn off LED when the door closes
-      digitalWrite(ledPin, LOW);
-      Serial.println("LED off");
+      if (ledOn) {
+        digitalWrite(ledPin, LOW);
+        ledOn = false;
+        Serial.println("LED off");
+      }
     }
   }
 
-  // Check if it's time to turn off the LED
-  if (isDoorOpen && millis() - doorOpenTime >= ledDuration) {
+  // Turn the LED off once, after it has been on for ledDuration.
+  if (ledOn && millis() - doorOpenTime >= ledDuration) {
     digitalWrite(ledPin, LOW);
+    ledOn = false;
     Serial.println("LED off");
   }
 
