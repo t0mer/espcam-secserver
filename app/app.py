@@ -51,14 +51,25 @@ class Server:
             else:
                 logger.warning("AUTH_TOKEN not set - capture endpoint is UNAUTHENTICATED")
 
+            # Validate the client address before making any outbound request.
+            # Kept outside the try/except so the error is not turned into "OK".
+            client_host = request.client.host if request.client else None
+            if not client_host:
+                raise HTTPException(status_code=400, detail="Unable to determine client address")
             try:
-                client_host = request.client.host
-                ipv4_address = str(client_host)
-                ip = ipaddress.IPv4Address(ipv4_address)
-                last_octet = ip.packed[-1]
-                # logger.info(client_host)
-                url = f'http://{str(client_host)}/capture'
-                file_names = [f'{last_octet}_image1.jpg', f'{last_octet}_image2.jpg', f'{last_octet}_image3.jpg']
+                client_ip = ipaddress.ip_address(client_host)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid client address")
+            # Only fetch from a camera on a private/loopback network. This stops
+            # the server from being coerced into requesting arbitrary external
+            # hosts (SSRF).
+            if not client_ip.is_private:
+                raise HTTPException(status_code=403, detail="Camera must be on a private network")
+            host_for_url = f"[{client_host}]" if client_ip.version == 6 else client_host
+            url = f"http://{host_for_url}/capture"
+
+            try:
+                file_names = [f'image{i+1}.jpg' for i in range(3)]
 
                 for i in range(3):
                     # Make the request to fetch the image
