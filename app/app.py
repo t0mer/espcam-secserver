@@ -19,6 +19,8 @@ MESSAGE = os.getenv("MESSAGE")
 # Shared secret required to trigger the capture endpoint. If unset the endpoint
 # stays open (bootstrap mode) but a warning is logged on every request.
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
+# Timeout (seconds) for outbound requests to the camera.
+REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "10"))
 greenAPI = API.GreenAPI(GREEN_API_INSTANCE_ID,GREEN_API_TOKEN)
 
 class Server:
@@ -72,17 +74,22 @@ class Server:
                 file_names = [f'image{i+1}.jpg' for i in range(3)]
 
                 for i in range(3):
-                    # Make the request to fetch the image
-                    response = requests.get(url)
-                    # Check if the request was successful
+                    # Fetch the image. The timeout prevents a hung camera from
+                    # blocking the worker indefinitely.
+                    try:
+                        response = requests.get(url, timeout=REQUEST_TIMEOUT)
+                    except requests.RequestException as e:
+                        logger.error(f"Failed to fetch image {i+1}: {e}")
+                        time.sleep(1)
+                        continue
                     if response.status_code == 200:
                         # Save the image to a local file
                         with open(file_names[i], 'wb') as file:
                             file.write(response.content)
-                        print(f"Image saved as {file_names[i]}")
+                        logger.info(f"Image saved as {file_names[i]}")
                     else:
-                        print(f"Failed to retrieve image {i+1}")
-                    
+                        logger.error(f"Failed to retrieve image {i+1}: HTTP {response.status_code}")
+
                     # Wait for 1 second before the next request
                     time.sleep(1)
                 
