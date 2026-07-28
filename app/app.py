@@ -39,6 +39,19 @@ def _redact_secrets(record):
 logger = logger.patch(_redact_secrets)
 greenAPI = API.GreenAPI(GREEN_API_INSTANCE_ID,GREEN_API_TOKEN)
 
+
+def validate_config():
+    """Fail fast if required configuration is missing."""
+    required = {
+        "GREEN_API_INSTANCE_ID": GREEN_API_INSTANCE_ID,
+        "GREEN_API_TOKEN": GREEN_API_TOKEN,
+        "TARGET": TARGET,
+        "AUTH_TOKEN": AUTH_TOKEN,
+    }
+    missing = [name for name, value in required.items() if not value]
+    if missing:
+        raise SystemExit("Missing required environment variables: " + ", ".join(missing))
+
 class Server:
     def __init__(self):
        
@@ -135,6 +148,7 @@ class Server:
     
   
     def start(self):
+        validate_config()
         uvicorn.run(self.app, host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
         
         
