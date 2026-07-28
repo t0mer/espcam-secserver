@@ -1,5 +1,6 @@
 import os
 import time
+import hmac
 import shutil
 import tempfile
 import uvicorn
@@ -49,8 +50,8 @@ class Server:
             # Authenticate before doing any work. Kept outside the try/except
             # below so the 401 is not swallowed and turned into "OK".
             if AUTH_TOKEN:
-                provided = request.headers.get("X-Auth-Token") or request.query_params.get("token")
-                if provided != AUTH_TOKEN:
+                provided = request.headers.get("X-Auth-Token") or request.query_params.get("token") or ""
+                if not hmac.compare_digest(provided, AUTH_TOKEN):
                     raise HTTPException(status_code=401, detail="Unauthorized")
             else:
                 logger.warning("AUTH_TOKEN not set - capture endpoint is UNAUTHENTICATED")
