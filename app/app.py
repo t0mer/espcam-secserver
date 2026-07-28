@@ -145,6 +145,11 @@ class Server:
                 shutil.rmtree(tmpdir, ignore_errors=True)
             return "OK"
 
+        @self.app.get("/health")
+        def health():
+            """Liveness/readiness probe."""
+            return {"status": "ok", "version": self.app.version}
+
     
   
     def start(self):
