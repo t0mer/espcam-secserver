@@ -1,6 +1,6 @@
 # ESP32-CAM Security Server
 
-![Camera setup](images/placed_camera.jpg)
+![Camera setup](https://raw.githubusercontent.com/t0mer/espcam-secserver/main/images/placed_camera.jpg)
 
 ## Overview
 `espcam-secserver` is both Python-based backend and ESP32-CAM-based security system. It uses **FastAPI** to manage HTTP requests and provides integration for multiple ESP32-CAM devices. This backend handles requests from the cameras, stores captured images, and manages a basic security system infrastructure.
